@@ -733,6 +733,10 @@ static char *send_oscam_config_global(struct templatevars *vars, struct uriparam
 	tpl_addVar(vars, TPLADD, "IGNCHKSUMONLYFORGLOBAL", value);
 	free_mk_t(value);
 
+#ifdef CS_CACHEEX_AIO
+	tpl_addVar(vars, TPLADD, "CACHEEXSRCNAME", (cfg.cacheex_srcname_webif == 1) ? "checked" : "");
+#endif
+
 #ifdef LEDSUPPORT
 	if(cfg.enableled == 1)
 		{ tpl_addVar(vars, TPLADD, "ENABLELEDSELECTED1", "selected"); }
@@ -7960,7 +7964,7 @@ static char *send_oscam_EMM(struct templatevars * vars, struct uriparams * param
 				}
 				tpl_addVar(vars, TPLADD, "EMM_TMP", "");
 
-				tpl_printf(vars, TPLAPPEND, emm_txt, ": %'d different EMM's from a total off %'d Entrys", emmrs,emms);
+				tpl_printf(vars, TPLAPPEND, emm_txt, ": %'d different EMM's from a total of %'d Entries", emmrs,emms);
 				for(emm_d=emmrs;emm_d>0;--emm_d)
 				{
 					snprintf(tmpstr, sizeof(tmpstr), "LINE_%d", emm_d);
@@ -9936,7 +9940,20 @@ void webif_client_init_lastreader(struct s_client * client, ECM_REQUEST * er, st
 		if(er->rc == E_FOUND)
 			{ cs_strncpy(client->lastreader, er_reader->label, sizeof(client->lastreader)); }
 		else if(er->rc == E_CACHEEX)
+		#ifdef CS_CACHEEX_AIO
+		{
+			if (cfg.cacheex_srcname_webif)
+			{
+				cs_strncpy(client->lastreader, username(er_reader->client), sizeof(client->lastreader));
+			}
+			else
+			{
+				cs_strncpy(client->lastreader, "cache3", sizeof(client->lastreader));
+			}
+		}
+		#else
 			{ cs_strncpy(client->lastreader, "cache3", sizeof(client->lastreader)); }
+		#endif
 		else if(er->rc < E_NOTFOUND)
 			{ snprintf(client->lastreader, sizeof(client->lastreader) - 1, "%.54s (cache)", er_reader->label); }
 		else

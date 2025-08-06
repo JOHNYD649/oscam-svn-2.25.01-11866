@@ -294,7 +294,7 @@ static int32_t irdeto_card_init_provider(struct s_reader *reader)
 
 	if(p)
 	{
-		rdr_log(reader, "active providers: %d (%s)", p, buf + 1);
+		rdr_log_sensitive(reader, "active providers: %d {(%s)}", p, buf + 1);
 	}
 
 	return OK;
@@ -539,11 +539,6 @@ static int32_t irdeto_card_init(struct s_reader *reader, ATR *newatr)
 		{
 			reader_chk_cmd(sc_T14GetCamKey383C, 0);
 		}
-	}
-
-	if(((reader->cardmhz != 600) && (reader->typ != R_INTERNAL)) || ((reader->typ == R_INTERNAL) && ((reader->mhz < 510) || (reader->cardmhz > 690))))
-	{
-		rdr_log(reader, "WARNING: For Irdeto cards you will have to set '%s= 600' in oscam.server", (reader->typ == R_INTERNAL ? "mhz" : "cardmhz") );
 	}
 
 	return irdeto_card_init_provider(reader);
@@ -950,12 +945,6 @@ static int32_t irdeto_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_
 		int32_t i;
 		for(i = 0; i < rdr->nprov; i++)
 		{
-			// 00XX00 provider is a not initialised not used provider
-			if((rdr->prid[i][1] == 0xFF) || ((rdr->prid[i][1] == 0x00) && (rdr->prid[i][3] == 0x00) && (rdr->caid != 0x0647)))
-			{
-				continue;
-			}
-
 			filters[idx].type = EMM_UNIQUE;
 			filters[idx].enabled = 1;
 			filters[idx].filter[0] = 0x82;
@@ -1391,7 +1380,7 @@ static int32_t irdeto_card_info(struct s_reader *reader)
 
 							if(first)
 							{
-								rdr_log(reader, "entitlements for provider: %d, id: %06X", p, b2i(3, &reader->prid[i][1]));
+								rdr_log_sensitive(reader, "entitlements for provider: %d, id: {%06X}", p, b2i(3, &reader->prid[i][1]));
 								first = 0;
 							}
 							rdr_log(reader, "chid: %04X, date: %s - %s", chid, t, t + 16);
